@@ -227,4 +227,78 @@ public class ArticleQueryServiceTest extends DbTestBase {
     ArticleData articleData = anotherUserFeed.getArticleDatas().get(0);
     Assertions.assertTrue(articleData.getProfileData().isFollowing());
   }
+
+  @Test
+  public void should_find_article_by_slug_with_user() {
+    Optional<ArticleData> optional = queryService.findBySlug(article.getSlug(), user);
+    Assertions.assertTrue(optional.isPresent());
+
+    ArticleData fetched = optional.get();
+    Assertions.assertEquals(fetched.getId(), article.getId());
+    Assertions.assertEquals(fetched.getTitle(), article.getTitle());
+    Assertions.assertFalse(fetched.isFavorited());
+    Assertions.assertEquals(fetched.getFavoritesCount(), 0);
+  }
+
+  @Test
+  public void should_find_article_by_slug_without_user() {
+    Optional<ArticleData> optional = queryService.findBySlug(article.getSlug(), null);
+    Assertions.assertTrue(optional.isPresent());
+
+    ArticleData fetched = optional.get();
+    Assertions.assertEquals(fetched.getId(), article.getId());
+    Assertions.assertFalse(fetched.isFavorited());
+  }
+
+  @Test
+  public void should_return_empty_when_slug_not_found() {
+    Optional<ArticleData> optional = queryService.findBySlug("non-existent-slug", user);
+    Assertions.assertFalse(optional.isPresent());
+  }
+
+  @Test
+  public void should_return_empty_when_slug_not_found_without_user() {
+    Optional<ArticleData> optional = queryService.findBySlug("non-existent-slug", null);
+    Assertions.assertFalse(optional.isPresent());
+  }
+
+  @Test
+  public void should_get_user_feed_with_cursor_empty_followers() {
+    CursorPager<ArticleData> feed =
+        queryService.findUserFeedWithCursor(
+            user, new CursorPageParameter<>(null, 20, Direction.NEXT));
+    Assertions.assertEquals(feed.getData().size(), 0);
+    Assertions.assertFalse(feed.hasNext());
+  }
+
+  @Test
+  public void should_get_user_feed_with_cursor_with_followers_and_articles() {
+    User anotherUser = new User("other2@email.com", "other2", "123", "", "");
+    userRepository.save(anotherUser);
+
+    FollowRelation followRelation = new FollowRelation(anotherUser.getId(), user.getId());
+    userRepository.saveRelation(followRelation);
+
+    CursorPager<ArticleData> feed =
+        queryService.findUserFeedWithCursor(
+            anotherUser, new CursorPageParameter<>(null, 20, Direction.NEXT));
+    Assertions.assertEquals(feed.getData().size(), 1);
+    ArticleData articleData = feed.getData().get(0);
+    Assertions.assertEquals(articleData.getId(), article.getId());
+    Assertions.assertTrue(articleData.getProfileData().isFollowing());
+  }
+
+  @Test
+  public void should_get_user_feed_with_cursor_prev_direction() {
+    User anotherUser = new User("other3@email.com", "other3", "123", "", "");
+    userRepository.save(anotherUser);
+
+    FollowRelation followRelation = new FollowRelation(anotherUser.getId(), user.getId());
+    userRepository.saveRelation(followRelation);
+
+    CursorPager<ArticleData> feed =
+        queryService.findUserFeedWithCursor(
+            anotherUser, new CursorPageParameter<>(null, 20, Direction.PREV));
+    Assertions.assertEquals(feed.getData().size(), 1);
+  }
 }
