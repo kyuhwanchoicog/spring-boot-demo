@@ -37,4 +37,62 @@ public class ArticleTest {
     Article article = new Article("what?the.hell,w", "desc", "body", Arrays.asList("java"), "123");
     assertThat(article.getSlug(), is("what-the-hell-w"));
   }
+
+  @Test
+  public void should_update_title_when_not_empty() {
+    Article article =
+        new Article("old title", "old desc", "old body", Arrays.asList("java"), "123");
+    article.update("new title", "", "");
+    assertThat(article.getTitle(), is("new title"));
+    assertThat(article.getSlug(), is("new-title"));
+    assertThat(article.getDescription(), is("old desc"));
+    assertThat(article.getBody(), is("old body"));
+  }
+
+  @Test
+  public void should_update_description_when_not_empty() {
+    Article article = new Article("title", "old desc", "old body", Arrays.asList("java"), "123");
+    article.update("", "new desc", "");
+    assertThat(article.getTitle(), is("title"));
+    assertThat(article.getDescription(), is("new desc"));
+    assertThat(article.getBody(), is("old body"));
+  }
+
+  @Test
+  public void should_update_body_when_not_empty() {
+    Article article = new Article("title", "old desc", "old body", Arrays.asList("java"), "123");
+    article.update("", "", "new body");
+    assertThat(article.getTitle(), is("title"));
+    assertThat(article.getDescription(), is("old desc"));
+    assertThat(article.getBody(), is("new body"));
+  }
+
+  @Test
+  public void should_not_update_fields_when_all_empty() {
+    Article article = new Article("title", "desc", "body", Arrays.asList("java"), "123");
+    article.update("", "", "");
+    assertThat(article.getTitle(), is("title"));
+    assertThat(article.getDescription(), is("desc"));
+    assertThat(article.getBody(), is("body"));
+  }
+
+  @Test
+  public void should_not_update_fields_when_all_null() {
+    Article article = new Article("title", "desc", "body", Arrays.asList("java"), "123");
+    article.update(null, null, null);
+    assertThat(article.getTitle(), is("title"));
+    assertThat(article.getDescription(), is("desc"));
+    assertThat(article.getBody(), is("body"));
+  }
+
+  @Test
+  public void should_update_all_fields_at_once() {
+    Article article =
+        new Article("old title", "old desc", "old body", Arrays.asList("java"), "123");
+    article.update("new title", "new desc", "new body");
+    assertThat(article.getTitle(), is("new title"));
+    assertThat(article.getSlug(), is("new-title"));
+    assertThat(article.getDescription(), is("new desc"));
+    assertThat(article.getBody(), is("new body"));
+  }
 }
